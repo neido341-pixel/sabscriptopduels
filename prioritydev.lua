@@ -1,7 +1,7 @@
--- Priority.Dev Hub | Auto Play + Auto Steal + Inf Jump + Auto Bat + Drop + TpDown + AntiRagdoll
+-- Priority.Dev Hub v5.1 | Auto Play + Auto Steal + Inf Jump + Auto Bat + Drop + TpDown + AntiRagdoll
 -- GUI: Twayve Hub Style (Extended)
 -- Авто-скорость: 55 без мозга, 29 с мозгом в руках
--- Auto Left/Right: возвращается на позицию кражи только если брейнрот в руках
+-- Auto Left/Right: бегает по кругу (СТАБИЛЬНАЯ ВЕРСИЯ)
 -- ПКМ на кнопке = сменить бинд
 
 repeat task.wait() until game:IsLoaded()
@@ -87,62 +87,23 @@ local function stopMoving()
     if hum then hum:Move(Vector3.zero, false) end
 end
 
--- ========== PATROL (FIXED - бесконечный循环) ==========
+-- ========== PATROL (СТАБИЛЬНАЯ - просто бегает по кругу) ==========
 local activeConnection, activeWaypoints, waypointIndex = nil, nil, 1
-local returnToBase = false
-local lastStealPos = nil
 
 local function startPatrol(waypoints)
     if activeConnection then activeConnection:Disconnect() end
-    activeWaypoints = waypoints; waypointIndex = 1; returnToBase = false; lastStealPos = nil
+    activeWaypoints = waypoints; waypointIndex = 1
     ensureProxy()
     activeConnection = RunService.Stepped:Connect(function()
         if not activeWaypoints then return end
         local char = Player.Character; if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
-        
-        -- Проверяем: если украли брейнрот и ещё не возвращаемся
-        if isCarryingBrainrot() and not returnToBase then
-            returnToBase = true
-            lastStealPos = hrp.Position -- Запоминаем где украли
-        end
-        
-        -- Если возвращаемся и брейнрот пропал (донесли до базы)
-        if returnToBase and not isCarryingBrainrot() then
-            returnToBase = false
-            lastStealPos = nil
-        end
-        
-        local target
-        if returnToBase and lastStealPos then
-            -- Возвращаемся на позицию где украли
-            target = lastStealPos
-        else
-            -- Идём по обычному маршруту (бесконечно)
-            if waypointIndex > #activeWaypoints then
-                waypointIndex = 1 -- Зацикливаем
-            end
-            target = activeWaypoints[waypointIndex]
-        end
-        
-        if not target then return end
-        
+        local target = activeWaypoints[waypointIndex]; if not target then return end
         local dist = (target - hrp.Position).Magnitude
         local speed = getDynamicSpeed()
-        
         if dist < 2.5 then
-            if returnToBase and lastStealPos then
-                -- Вернулись на позицию кражи
-                returnToBase = false
-                lastStealPos = nil
-                -- Продолжаем с текущей точки маршрута
-            else
-                -- Обычное движение по маршруту
-                waypointIndex = waypointIndex + 1
-                if waypointIndex > #activeWaypoints then
-                    waypointIndex = 1 -- Зацикливаем (никогда не останавливаемся)
-                end
-            end
+            waypointIndex = waypointIndex + 1
+            if waypointIndex > #activeWaypoints then waypointIndex = 1 end
         else
             moveTo(target, speed)
         end
@@ -151,7 +112,7 @@ end
 
 local function stopPatrol()
     if activeConnection then activeConnection:Disconnect(); activeConnection = nil end
-    activeWaypoints = nil; waypointIndex = 1; returnToBase = false; lastStealPos = nil; stopMoving()
+    activeWaypoints = nil; waypointIndex = 1; stopMoving()
 end
 
 -- ========== AUTO STEAL ==========
@@ -285,8 +246,8 @@ local function findBatTool()
 end
 local function startAutoBat()
     if autoBatConn then return end
-    if autoLeftEnabled then autoLeftEnabled = false; if updateButtonUI then updateButtonUI() end; stopAutoLeft() end
-    if autoRightEnabled then autoRightEnabled = false; if updateButtonUI then updateButtonUI() end; stopAutoRight() end
+    if Enabled.AutoLeft then Enabled.AutoLeft = false; if updateButtonUI then updateButtonUI() end; stopAutoLeft() end
+    if Enabled.AutoRight then Enabled.AutoRight = false; if updateButtonUI then updateButtonUI() end; stopAutoRight() end
     autoBatEnabled = true
     autoBatConn = RunService.Heartbeat:Connect(function()
         if not autoBatEnabled then return end
@@ -469,7 +430,7 @@ sTitle.Font = Enum.Font.GothamBlack; sTitle.Text = "Priority.Dev"; sTitle.TextCo
 sTitle.TextSize = 12; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.Parent = sHeader
 local titleSub = Instance.new("TextLabel", sHeader)
 titleSub.BackgroundTransparency = 1; titleSub.Position = UDim2.fromOffset(18, 18); titleSub.Size = UDim2.new(1, -30, 0, 12)
-titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Full Hub v6"; titleSub.TextColor3 = HAZE.ACCENT
+titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Stable v5.1"; titleSub.TextColor3 = HAZE.ACCENT
 titleSub.TextSize = 8; titleSub.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Drag
@@ -660,3 +621,8 @@ Player.CharacterAdded:Connect(function()
     if Enabled.AutoLeft then stopPatrol(); startPatrol(leftWaypoints)
     elseif Enabled.AutoRight then stopPatrol(); startPatrol(rightWaypoints) end
 end)
+
+print("✅ Priority.Dev Hub v5.1 Loaded!")
+print("📌 Бегает по кругу (без остановок)")
+print("📌 Авто-скорость: 55 без мозга, 29 с мозгом")
+print("📌 ПКМ на кнопке = сменить бинд")
