@@ -421,12 +421,12 @@ local titleAccent = Instance.new("Frame", sHeader)
 titleAccent.Size = UDim2.fromOffset(3, 16); titleAccent.Position = UDim2.new(0, 10, 0.5, -8)
 titleAccent.BackgroundColor3 = HAZE.ACCENT; titleAccent.BorderSizePixel = 0; HazeCorner(titleAccent, 999)
 local sTitle = Instance.new("TextLabel")
-sTitle.BackgroundTransparency = 1; sTitle.Position = UDim2.fromOffset(18, 2); sTitle.Size = UDim2.new(1, -30, 0, 16)
+sTitle.BackgroundTransparency = 1; sTitle.Position = UDim2.fromOffset(18, 2); sTitle.Size = UDim2.new(1, -30, 0, 24)
 sTitle.Font = Enum.Font.GothamBlack; sTitle.Text = "Priority.Dev"; sTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 sTitle.TextSize = 12; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.Parent = sHeader
 local titleSub = Instance.new("TextLabel", sHeader)
 titleSub.BackgroundTransparency = 1; titleSub.Position = UDim2.fromOffset(18, 18); titleSub.Size = UDim2.new(1, -30, 0, 12)
-titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Full Hub v4"; titleSub.TextColor3 = HAZE.ACCENT
+titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Duel script"; titleSub.TextColor3 = HAZE.ACCENT
 titleSub.TextSize = 8; titleSub.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Drag
