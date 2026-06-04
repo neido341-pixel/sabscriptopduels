@@ -1,7 +1,6 @@
--- Priority.Dev Hub v5.1 | Auto Play + Auto Steal + Inf Jump + Auto Bat + Drop + TpDown + AntiRagdoll
+-- Priority.Dev Hub v5.2 | Auto Play + Auto Steal + Inf Jump + Auto Bat + Drop + TpDown + AntiRagdoll
 -- GUI: Twayve Hub Style (Extended)
 -- Авто-скорость: 55 без мозга, 29 с мозгом в руках
--- Auto Left/Right: бегает по кругу (СТАБИЛЬНАЯ ВЕРСИЯ)
 -- ПКМ на кнопке = сменить бинд
 
 repeat task.wait() until game:IsLoaded()
@@ -87,7 +86,7 @@ local function stopMoving()
     if hum then hum:Move(Vector3.zero, false) end
 end
 
--- ========== PATROL (СТАБИЛЬНАЯ - просто бегает по кругу) ==========
+-- ========== PATROL (СТАБИЛЬНАЯ v5 - просто бегает) ==========
 local activeConnection, activeWaypoints, waypointIndex = nil, nil, 1
 
 local function startPatrol(waypoints)
@@ -430,7 +429,7 @@ sTitle.Font = Enum.Font.GothamBlack; sTitle.Text = "Priority.Dev"; sTitle.TextCo
 sTitle.TextSize = 12; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.Parent = sHeader
 local titleSub = Instance.new("TextLabel", sHeader)
 titleSub.BackgroundTransparency = 1; titleSub.Position = UDim2.fromOffset(18, 18); titleSub.Size = UDim2.new(1, -30, 0, 12)
-titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Stable v5.1"; titleSub.TextColor3 = HAZE.ACCENT
+titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Stable v5.2"; titleSub.TextColor3 = HAZE.ACCENT
 titleSub.TextSize = 8; titleSub.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Drag
@@ -622,7 +621,7 @@ Player.CharacterAdded:Connect(function()
     elseif Enabled.AutoRight then stopPatrol(); startPatrol(rightWaypoints) end
 end)
 
-print("✅ Priority.Dev Hub v5.1 Loaded!")
-print("📌 Бегает по кругу (без остановок)")
+print("✅ Priority.Dev Hub v5.2 Loaded!")
+print("📌 Бегает по кругу (как в v5)")
 print("📌 Авто-скорость: 55 без мозга, 29 с мозгом")
 print("📌 ПКМ на кнопке = сменить бинд")
