@@ -87,7 +87,7 @@ local function stopMoving()
     if hum then hum:Move(Vector3.zero, false) end
 end
 
--- ========== PATROL (NEW LOGIC) ==========
+-- ========== PATROL (FIXED - бесконечный循环) ==========
 local activeConnection, activeWaypoints, waypointIndex = nil, nil, 1
 local returnToBase = false
 local lastStealPos = nil
@@ -101,20 +101,30 @@ local function startPatrol(waypoints)
         local char = Player.Character; if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
         
+        -- Проверяем: если украли брейнрот и ещё не возвращаемся
         if isCarryingBrainrot() and not returnToBase then
-            returnToBase = true; lastStealPos = hrp.Position
+            returnToBase = true
+            lastStealPos = hrp.Position -- Запоминаем где украли
         end
+        
+        -- Если возвращаемся и брейнрот пропал (донесли до базы)
         if returnToBase and not isCarryingBrainrot() then
-            returnToBase = false; lastStealPos = nil
+            returnToBase = false
+            lastStealPos = nil
         end
         
         local target
         if returnToBase and lastStealPos then
+            -- Возвращаемся на позицию где украли
             target = lastStealPos
         else
-            if waypointIndex > #activeWaypoints then waypointIndex = 1 end
+            -- Идём по обычному маршруту (бесконечно)
+            if waypointIndex > #activeWaypoints then
+                waypointIndex = 1 -- Зацикливаем
+            end
             target = activeWaypoints[waypointIndex]
         end
+        
         if not target then return end
         
         local dist = (target - hrp.Position).Magnitude
@@ -122,20 +132,15 @@ local function startPatrol(waypoints)
         
         if dist < 2.5 then
             if returnToBase and lastStealPos then
-                returnToBase = false; lastStealPos = nil
-                waypointIndex = waypointIndex + 1
-                if waypointIndex > #activeWaypoints then waypointIndex = 1 end
+                -- Вернулись на позицию кражи
+                returnToBase = false
+                lastStealPos = nil
+                -- Продолжаем с текущей точки маршрута
             else
+                -- Обычное движение по маршруту
                 waypointIndex = waypointIndex + 1
                 if waypointIndex > #activeWaypoints then
-                    if not isCarryingBrainrot() then
-                        activeConnection:Disconnect(); activeConnection = nil; activeWaypoints = nil
-                        if Enabled.AutoLeft then Enabled.AutoLeft = false; if updateButtonUI then updateButtonUI() end
-                        elseif Enabled.AutoRight then Enabled.AutoRight = false; if updateButtonUI then updateButtonUI() end end
-                        stopMoving(); return
-                    else
-                        waypointIndex = 1
-                    end
+                    waypointIndex = 1 -- Зацикливаем (никогда не останавливаемся)
                 end
             end
         else
