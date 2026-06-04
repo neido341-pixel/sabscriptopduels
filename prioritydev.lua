@@ -1,6 +1,6 @@
--- Priority.Dev Hub v5.2 | Auto Play + Auto Steal + Inf Jump + Auto Bat + Drop + TpDown + AntiRagdoll
+-- Priority.Dev Hub | Auto Play + Auto Steal + Inf Jump + Auto Bat + Drop + TpDown + AntiRagdoll
 -- GUI: Twayve Hub Style (Extended)
--- Авто-скорость: 55 без мозга, 29 с мозгом в руках
+-- Binds: Z = Auto Left, C = Auto Right, V = Auto Steal, X = Inf Jump, E = Auto Bat, R = Drop, F = TpDown, G = AntiRagdoll
 -- ПКМ на кнопке = сменить бинд
 
 repeat task.wait() until game:IsLoaded()
@@ -58,17 +58,6 @@ local function ensureProxy()
 end
 
 -- ========== MOVEMENT ==========
-local function isCarryingBrainrot()
-    local char = Player.Character
-    if not char then return false end
-    if Player:GetAttribute("Stealing") == true then return true end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum and hum.WalkSpeed < 20 then return true end
-    return false
-end
-local function getDynamicSpeed()
-    if isCarryingBrainrot() then return Values.StealSpeed else return Values.GoingSpeed end
-end
 local function moveTo(target, speed)
     local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
@@ -86,29 +75,30 @@ local function stopMoving()
     if hum then hum:Move(Vector3.zero, false) end
 end
 
--- ========== PATROL (СТАБИЛЬНАЯ v5 - просто бегает) ==========
-local activeConnection, activeWaypoints, waypointIndex = nil, nil, 1
-
+-- ========== PATROL ==========
+local activeConnection, activeWaypoints, waypointIndex, currentPhase = nil, nil, 1, 1
 local function startPatrol(waypoints)
     if activeConnection then activeConnection:Disconnect() end
-    activeWaypoints = waypoints; waypointIndex = 1
-    ensureProxy()
+    activeWaypoints = waypoints; waypointIndex = 1; currentPhase = 1; ensureProxy()
     activeConnection = RunService.Stepped:Connect(function()
         if not activeWaypoints then return end
         local char = Player.Character; if not char then return end
         local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
         local target = activeWaypoints[waypointIndex]; if not target then return end
         local dist = (target - hrp.Position).Magnitude
-        local speed = getDynamicSpeed()
+        local speed = (currentPhase <= 2) and Values.GoingSpeed or Values.StealSpeed
         if dist < 2.5 then
             waypointIndex = waypointIndex + 1
-            if waypointIndex > #activeWaypoints then waypointIndex = 1 end
-        else
-            moveTo(target, speed)
-        end
+            if waypointIndex > #activeWaypoints then
+                activeConnection:Disconnect(); activeConnection = nil; activeWaypoints = nil
+                if Enabled.AutoLeft then Enabled.AutoLeft = false; if updateButtonUI then updateButtonUI() end
+                elseif Enabled.AutoRight then Enabled.AutoRight = false; if updateButtonUI then updateButtonUI() end end
+                stopMoving(); return
+            end
+            if waypointIndex == 3 then currentPhase = 3 end
+        else moveTo(target, speed) end
     end)
 end
-
 local function stopPatrol()
     if activeConnection then activeConnection:Disconnect(); activeConnection = nil end
     activeWaypoints = nil; waypointIndex = 1; stopMoving()
@@ -245,8 +235,8 @@ local function findBatTool()
 end
 local function startAutoBat()
     if autoBatConn then return end
-    if Enabled.AutoLeft then Enabled.AutoLeft = false; if updateButtonUI then updateButtonUI() end; stopAutoLeft() end
-    if Enabled.AutoRight then Enabled.AutoRight = false; if updateButtonUI then updateButtonUI() end; stopAutoRight() end
+    if autoLeftEnabled then autoLeftEnabled = false; if updateButtonUI then updateButtonUI() end; stopAutoLeft() end
+    if autoRightEnabled then autoRightEnabled = false; if updateButtonUI then updateButtonUI() end; stopAutoRight() end
     autoBatEnabled = true
     autoBatConn = RunService.Heartbeat:Connect(function()
         if not autoBatEnabled then return end
@@ -365,11 +355,18 @@ local function HazeStroke(p, t, c, tr) local s = Instance.new("UIStroke"); s.App
 local Enabled = { AutoLeft = false, AutoRight = false, AutoSteal = false, InfJump = false, AutoBat = false, AntiRagdoll = false }
 local updateButtonUI = nil
 local infoLabel = nil
+-- Таблица биндов (ключ = Enum.KeyCode)
 local Binds = {
-    AutoLeft = Enum.KeyCode.Z, AutoRight = Enum.KeyCode.C, AutoSteal = Enum.KeyCode.V,
-    InfJump = Enum.KeyCode.X, AutoBat = Enum.KeyCode.E, Drop = Enum.KeyCode.R,
-    TpDown = Enum.KeyCode.F, AntiRagdoll = Enum.KeyCode.G,
+    AutoLeft = Enum.KeyCode.Z,
+    AutoRight = Enum.KeyCode.C,
+    AutoSteal = Enum.KeyCode.V,
+    InfJump = Enum.KeyCode.X,
+    AutoBat = Enum.KeyCode.E,
+    Drop = Enum.KeyCode.R,
+    TpDown = Enum.KeyCode.F,
+    AntiRagdoll = Enum.KeyCode.G,
 }
+-- Обратная таблица для быстрого поиска
 local BindAction = {}
 for action, key in pairs(Binds) do BindAction[key] = action end
 
@@ -429,7 +426,7 @@ sTitle.Font = Enum.Font.GothamBlack; sTitle.Text = "Priority.Dev"; sTitle.TextCo
 sTitle.TextSize = 12; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.Parent = sHeader
 local titleSub = Instance.new("TextLabel", sHeader)
 titleSub.BackgroundTransparency = 1; titleSub.Position = UDim2.fromOffset(18, 18); titleSub.Size = UDim2.new(1, -30, 0, 12)
-titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Stable v5.2"; titleSub.TextColor3 = HAZE.ACCENT
+titleSub.Font = Enum.Font.GothamMedium; titleSub.Text = "Full Hub v4"; titleSub.TextColor3 = HAZE.ACCENT
 titleSub.TextSize = 8; titleSub.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Drag
@@ -483,6 +480,7 @@ local function makeBindableButton(y, actionName, defaultBind)
     local btnStroke = HazeStroke(btn, 1, HAZE.STROKE, 0.55)
     btn.Text = actionName .. " [" .. Binds[actionName].Name .. "]: OFF"; btn.TextColor3 = HAZE.DIM
 
+    -- Обновление текста кнопки
     local function refreshText()
         local state = Enabled[actionName]
         local bindName = Binds[actionName].Name
@@ -497,6 +495,7 @@ local function makeBindableButton(y, actionName, defaultBind)
         end
     end
 
+    -- ПКМ - смена бинда
     btn.MouseButton2Click:Connect(function()
         local oldText = btn.Text
         btn.Text = actionName .. " [...]: ?"; btn.TextColor3 = HAZE.ACCENT
@@ -505,10 +504,15 @@ local function makeBindableButton(y, actionName, defaultBind)
             if gp then return end
             if input.UserInputType == Enum.UserInputType.Keyboard then
                 local newKey = input.KeyCode
+                -- Освобождаем старый бинд
                 local oldAction = BindAction[Binds[actionName]]
                 if oldAction then BindAction[Binds[actionName]] = nil end
+                -- Если новый бинд занят, освобождаем
                 local conflictAction = BindAction[newKey]
-                if conflictAction and conflictAction ~= actionName then BindAction[newKey] = nil end
+                if conflictAction and conflictAction ~= actionName then
+                    BindAction[newKey] = nil
+                    -- Сбрасываем старый бинд у конфликта
+                end
                 Binds[actionName] = newKey
                 BindAction[newKey] = actionName
                 refreshText()
@@ -520,6 +524,7 @@ local function makeBindableButton(y, actionName, defaultBind)
         end)
     end)
 
+    -- ЛКМ - активация
     btn.MouseButton1Click:Connect(function()
         Enabled[actionName] = not Enabled[actionName]
         local state = Enabled[actionName]
@@ -550,6 +555,7 @@ local function makeBindableButton(y, actionName, defaultBind)
     return btn, btnStroke, refreshText
 end
 
+-- Создаем все кнопки
 local buttons = {}
 local buttonRefreshers = {}
 local actions = {
@@ -621,7 +627,6 @@ Player.CharacterAdded:Connect(function()
     elseif Enabled.AutoRight then stopPatrol(); startPatrol(rightWaypoints) end
 end)
 
-print("✅ Priority.Dev Hub v5.2 Loaded!")
-print("📌 Бегает по кругу (как в v5)")
-print("📌 Авто-скорость: 55 без мозга, 29 с мозгом")
+print("✅ Priority.Dev Hub Loaded!")
 print("📌 ПКМ на кнопке = сменить бинд")
+print("📌 [Z] Left | [C] Right | [V] Steal | [X] Jump | [E] Bat | [R] Drop | [F] TpDown | [G] AntiRag")
