@@ -187,9 +187,6 @@ local function enableSmoothDrag(handle, frame)
         dragInput = input
         dragStart = input.Position
         startPos = frame.Position
-        if frame.AnchorPoint == Vector2.new(0.5, 0.5) then
-            startPos = UDim2.new(startPos.X.Scale, startPos.X.Offset, startPos.Y.Scale, startPos.Y.Offset)
-        end
         Tween(frame, {Rotation = 0.35}, TWEEN_SNAP)
     end
 
@@ -199,17 +196,10 @@ local function enableSmoothDrag(handle, frame)
         if not dragging or input ~= dragInput then return end
         if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then return end
         local delta = input.Position - dragStart
-        if frame.AnchorPoint == Vector2.new(0.5, 0.5) then
-            frame.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
-        else
-            frame.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
-        end
+        frame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
     end)
 
     UserInputService.InputEnded:Connect(function(input)
